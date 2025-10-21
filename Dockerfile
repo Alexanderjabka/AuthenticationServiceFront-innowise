@@ -1,0 +1,29 @@
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+
+ARG VITE_API_URL
+ARG VITE_LOGIN_REDIRECT_URL
+ARG VITE_REGISTER_REDIRECT_URL
+ARG VITE_AUTH_TOKEN_KEY
+ARG VITE_REFRESH_TOKEN_KEY
+
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_LOGIN_REDIRECT_URL=${VITE_LOGIN_REDIRECT_URL}
+ENV VITE_REGISTER_REDIRECT_URL=${VITE_REGISTER_REDIRECT_URL}
+ENV VITE_AUTH_TOKEN_KEY=${VITE_AUTH_TOKEN_KEY}
+ENV VITE_REFRESH_TOKEN_KEY=${VITE_REFRESH_TOKEN_KEY}
+
+RUN npm run build
+
+FROM nginx:1.27-alpine AS runtime
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+EXPOSE 8086
+CMD ["nginx", "-g", "daemon off;"]
