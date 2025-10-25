@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import AllImages from './pages/AllImages'
+import MyImages from './pages/MyImages'
 import { useDispatch } from 'react-redux'
 import { logout } from './store/authSlice'
 
@@ -24,7 +26,9 @@ function App() {
               </div>
             }
           />
+          <Route path="/my-images" element={<MyImages />} />
         </Route>
+        <Route path="/images" element={<AllImages />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
       </Routes>

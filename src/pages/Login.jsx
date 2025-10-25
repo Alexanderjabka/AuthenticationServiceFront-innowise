@@ -11,7 +11,7 @@ function Login() {
 
   useEffect(() => {
     if (token) {
-      window.location.href = import.meta.env.VITE_LOGIN_REDIRECT_URL || 'http://localhost:8087/api/images'
+      window.location.href = '/images'
     }
   }, [token])
 
