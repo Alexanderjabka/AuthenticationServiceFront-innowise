@@ -20,7 +20,7 @@ function AllImages() {
   const [sortBy, setSortBy] = useState('newest')
 
   useEffect(() => {
-    dispatch(fetchAllImages({ page: currentPage, limit: 12 }))
+    dispatch(fetchAllImages({ page: currentPage, limit: 10 }))
   }, [dispatch, currentPage])
 
   const handlePageChange = (page) => {
@@ -30,19 +30,14 @@ function AllImages() {
 
   const handleSearch = (e) => {
     e.preventDefault()
-    // TODO: Implement search functionality
-    console.log('Search for:', searchQuery)
   }
 
   const handleSortChange = (e) => {
     setSortBy(e.target.value)
-    // TODO: Implement sorting functionality
-    console.log('Sort by:', e.target.value)
   }
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'white' }}>
-      {/* Header */}
       <div style={{
         backgroundColor: 'white',
         padding: '24px 0',
@@ -106,7 +101,6 @@ function AllImages() {
         </div>
       </div>
 
-      {/* Search Bar */}
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto 32px auto',
@@ -117,7 +111,6 @@ function AllImages() {
           gap: '16px',
           alignItems: 'center'
         }}>
-          {/* Search */}
           <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px', flex: '1', minWidth: '200px' }}>
             <input
               type="text"
@@ -165,7 +158,6 @@ function AllImages() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto',

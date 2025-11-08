@@ -16,7 +16,7 @@ const initialState = {
 // Fetch all images with pagination
 export const fetchAllImages = createAsyncThunk(
   'images/fetchAllImages',
-  async ({ page = 1, limit = 12 }, { rejectWithValue }) => {
+  async ({ page = 1, limit = 10 }, { rejectWithValue }) => {
     try {
       const { data } = await api.get(`/images?page=${page}&limit=${limit}`)
       return data
@@ -30,7 +30,7 @@ export const fetchAllImages = createAsyncThunk(
 // Fetch user's images with pagination
 export const fetchUserImages = createAsyncThunk(
   'images/fetchUserImages',
-  async ({ page = 1, limit = 12 }, { rejectWithValue }) => {
+  async ({ page = 1, limit = 10 }, { rejectWithValue }) => {
     try {
       const { data } = await api.get(`/images/user?page=${page}&limit=${limit}`)
       return data
@@ -44,12 +44,13 @@ export const fetchUserImages = createAsyncThunk(
 // Upload new image
 export const uploadImage = createAsyncThunk(
   'images/uploadImage',
-  async (file, { rejectWithValue }) => {
+  async ({ file, description = '' }, { rejectWithValue }) => {
     try {
       const formData = new FormData()
-      formData.append('image', file)
+      formData.append('file', file)
+      formData.append('description', description)
       
-      const { data } = await api.post('/images/upload', formData, {
+      const { data } = await api.post('/images', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -106,9 +107,9 @@ const imageSlice = createSlice({
       .addCase(fetchAllImages.fulfilled, (state, action) => {
         state.loading = false
         state.allImages = action.payload.images || action.payload.data || []
-        state.totalPages = action.payload.totalPages || Math.ceil((action.payload.total || 0) / 12)
-        state.totalImages = action.payload.total || 0
-        state.currentPage = action.payload.currentPage || 1
+        state.totalPages = action.payload.totalPages || action.payload.pagination?.totalPages || Math.ceil((action.payload.total || 0) / 10)
+        state.totalImages = action.payload.total || action.payload.pagination?.total || 0
+        state.currentPage = action.payload.currentPage || action.payload.pagination?.currentPage || 1
       })
       .addCase(fetchAllImages.rejected, (state, action) => {
         state.loading = false
@@ -123,9 +124,9 @@ const imageSlice = createSlice({
       .addCase(fetchUserImages.fulfilled, (state, action) => {
         state.loading = false
         state.userImages = action.payload.images || action.payload.data || []
-        state.totalPages = action.payload.totalPages || Math.ceil((action.payload.total || 0) / 12)
-        state.totalImages = action.payload.total || 0
-        state.currentPage = action.payload.currentPage || 1
+        state.totalPages = action.payload.totalPages || action.payload.pagination?.totalPages || Math.ceil((action.payload.total || 0) / 10)
+        state.totalImages = action.payload.total || action.payload.pagination?.total || 0
+        state.currentPage = action.payload.currentPage || action.payload.pagination?.currentPage || 1
       })
       .addCase(fetchUserImages.rejected, (state, action) => {
         state.loading = false

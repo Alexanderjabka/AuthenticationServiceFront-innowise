@@ -2,7 +2,7 @@ import api from './api'
 
 export const imageService = {
   // Fetch all images with pagination
-  async fetchAllImages(page = 1, limit = 12) {
+  async fetchAllImages(page = 1, limit = 10) {
     try {
       const response = await api.get(`/images?page=${page}&limit=${limit}`)
       return response.data
@@ -12,7 +12,7 @@ export const imageService = {
   },
 
   // Fetch user's images with pagination
-  async fetchUserImages(page = 1, limit = 12) {
+  async fetchUserImages(page = 1, limit = 10) {
     try {
       const response = await api.get(`/images/user?page=${page}&limit=${limit}`)
       return response.data
@@ -59,7 +59,7 @@ export const imageService = {
   },
 
   // Search images
-  async searchImages(query, page = 1, limit = 12) {
+  async searchImages(query, page = 1, limit = 10) {
     try {
       const response = await api.get(`/images/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`)
       return response.data

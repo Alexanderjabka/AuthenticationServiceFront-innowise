@@ -6,6 +6,7 @@ function UploadImage({ onUploadSuccess }) {
   const [dragActive, setDragActive] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
   const [preview, setPreview] = useState(null)
+  const [description, setDescription] = useState('')
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef(null)
   const dispatch = useDispatch()
@@ -64,11 +65,12 @@ function UploadImage({ onUploadSuccess }) {
 
     setUploading(true)
     try {
-      await dispatch(uploadImage(selectedFile)).unwrap()
+      await dispatch(uploadImage({ file: selectedFile, description })).unwrap()
       
       // Reset form
       setSelectedFile(null)
       setPreview(null)
+      setDescription('')
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
@@ -77,7 +79,6 @@ function UploadImage({ onUploadSuccess }) {
         onUploadSuccess()
       }
     } catch (error) {
-      console.error('Upload failed:', error)
       alert('Upload failed: ' + (error.message || 'Unknown error'))
     } finally {
       setUploading(false)
@@ -87,6 +88,7 @@ function UploadImage({ onUploadSuccess }) {
   const handleCancel = () => {
     setSelectedFile(null)
     setPreview(null)
+    setDescription('')
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -199,6 +201,22 @@ function UploadImage({ onUploadSuccess }) {
           }}>
             {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
           </p>
+          
+          <input
+            type="text"
+            placeholder="Add a description (optional)"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              border: '1px solid #dee2e6',
+              borderRadius: '4px',
+              fontSize: '14px',
+              marginBottom: '16px',
+              outline: 'none'
+            }}
+          />
           
           <div style={{
             display: 'flex',

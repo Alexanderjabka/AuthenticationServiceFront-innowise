@@ -23,7 +23,7 @@ function MyImages() {
   const [sortBy, setSortBy] = useState('newest')
 
   useEffect(() => {
-    dispatch(fetchUserImages({ page: currentPage, limit: 12 }))
+    dispatch(fetchUserImages({ page: currentPage, limit: 10 }))
   }, [dispatch, currentPage])
 
   const handlePageChange = (page) => {
@@ -33,25 +33,19 @@ function MyImages() {
 
   const handleUploadSuccess = () => {
     setShowUpload(false)
-    // Refresh the current page
-    dispatch(fetchUserImages({ page: currentPage, limit: 12 }))
+    dispatch(fetchUserImages({ page: currentPage, limit: 10 }))
   }
 
   const handleSearch = (e) => {
     e.preventDefault()
-    // TODO: Implement search functionality
-    console.log('Search for:', searchQuery)
   }
 
   const handleSortChange = (e) => {
     setSortBy(e.target.value)
-    // TODO: Implement sorting functionality
-    console.log('Sort by:', e.target.value)
   }
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'white', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
       <div style={{
         backgroundColor: 'white',
         padding: '24px 0',
@@ -138,7 +132,6 @@ function MyImages() {
         </div>
       </div>
 
-      {/* Main Content - Horizontal Layout */}
       <div style={{
         display: 'flex',
         flex: 1,
@@ -147,7 +140,6 @@ function MyImages() {
         padding: '24px',
         gap: '24px'
       }}>
-        {/* Upload Section */}
         {showUpload && (
           <div style={{
             flex: '0 0 300px',
@@ -169,7 +161,6 @@ function MyImages() {
           </div>
         )}
 
-        {/* Gallery Section */}
         <div style={{ flex: 1 }}>
           {!showUpload && (
             <ImageGallery

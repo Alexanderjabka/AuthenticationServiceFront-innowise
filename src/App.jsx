@@ -1,11 +1,11 @@
 import './App.css'
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
 import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import AllImages from './pages/AllImages'
 import MyImages from './pages/MyImages'
-import { useDispatch } from 'react-redux'
 import { logout } from './store/authSlice'
 
 function LogoutButton() {
@@ -26,8 +26,6 @@ function LogoutButton() {
 
 function AppContent() {
   const location = useLocation()
-  
-  // Показываем кнопку logout только на страницах my-images и images
   const shouldShowLogout = location.pathname === '/my-images' || location.pathname === '/images'
   
   return (

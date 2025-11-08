@@ -1,11 +1,36 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { deleteImage } from '../store/imageSlice'
+import api from '../services/api'
 
 function ImageCard({ image, isOwner = false, onImageClick }) {
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [imageBlobUrl, setImageBlobUrl] = useState(null)
   const dispatch = useDispatch()
+
+  useEffect(() => {
+    const loadImage = async () => {
+      try {
+        const response = await api.get(image.contentUrl, {
+          responseType: 'blob'
+        })
+        const blobUrl = URL.createObjectURL(response.data)
+        setImageBlobUrl(blobUrl)
+        setIsLoading(false)
+      } catch (error) {
+        setIsLoading(false)
+      }
+    }
+
+    loadImage()
+
+    return () => {
+      if (imageBlobUrl) {
+        URL.revokeObjectURL(imageBlobUrl)
+      }
+    }
+  }, [image.contentUrl])
 
   const handleDelete = async () => {
     setIsLoading(true)
@@ -13,20 +38,9 @@ function ImageCard({ image, isOwner = false, onImageClick }) {
       await dispatch(deleteImage(image.id)).unwrap()
       setShowDeleteConfirm(false)
     } catch (error) {
-      console.error('Failed to delete image:', error)
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
   }
 
   const handleImageError = (e) => {
@@ -53,46 +67,43 @@ function ImageCard({ image, isOwner = false, onImageClick }) {
     }}
     onClick={() => onImageClick && onImageClick(image)}
     >
-      {/* Image */}
       <div style={{ position: 'relative', width: '100%', height: '200px', overflow: 'hidden' }}>
-        <img
-          src={image.url || image.imageUrl}
-          alt={image.title || image.filename || 'Image'}
-          style={{
+        {imageBlobUrl ? (
+          <img
+            src={imageBlobUrl}
+            alt={image.description || 'Image'}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transition: 'transform 0.3s ease'
+            }}
+            onError={handleImageError}
+          />
+        ) : (
+          <div style={{
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
-            transition: 'transform 0.3s ease'
-          }}
-          onError={handleImageError}
-          onLoad={() => setIsLoading(false)}
-        />
-        
-        {/* Loading overlay */}
-        {isLoading && (
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(255,255,255,0.8)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            backgroundColor: '#f0f0f0'
           }}>
-            <div style={{
-              width: '20px',
-              height: '20px',
-              border: '2px solid #e0e0e0',
-              borderTop: '2px solid #007bff',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }} />
+            {isLoading ? (
+              <div style={{
+                width: '30px',
+                height: '30px',
+                border: '3px solid #e0e0e0',
+                borderTop: '3px solid #007bff',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }} />
+            ) : (
+              <span style={{ color: '#999' }}>Failed to load</span>
+            )}
           </div>
         )}
 
-        {/* Delete button for owner */}
         {isOwner && (
           <button
             onClick={(e) => {
@@ -128,37 +139,6 @@ function ImageCard({ image, isOwner = false, onImageClick }) {
         )}
       </div>
 
-      {/* Image info */}
-      <div style={{ padding: '12px' }}>
-        <h4 style={{
-          margin: '0 0 8px 0',
-          fontSize: '14px',
-          fontWeight: '600',
-          color: '#333',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
-        }}>
-          {image.title || image.filename || 'Untitled'}
-        </h4>
-        
-        <div style={{
-          fontSize: '12px',
-          color: '#666',
-          marginBottom: '4px'
-        }}>
-          {image.author?.username || image.user?.username || 'Unknown'}
-        </div>
-        
-        <div style={{
-          fontSize: '11px',
-          color: '#999'
-        }}>
-          {formatDate(image.createdAt || image.uploadDate)}
-        </div>
-      </div>
-
-      {/* Delete confirmation modal */}
       {showDeleteConfirm && (
         <div style={{
           position: 'fixed',
