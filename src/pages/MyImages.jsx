@@ -7,7 +7,6 @@ import UploadImage from '../components/UploadImage'
 
 function MyImages() {
   const dispatch = useDispatch()
-  const { user } = useSelector((state) => state.auth)
   const { 
     userImages, 
     loading, 

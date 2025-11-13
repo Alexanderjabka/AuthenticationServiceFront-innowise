@@ -6,7 +6,6 @@ import ImageGallery from '../components/ImageGallery'
 
 function AllImages() {
   const dispatch = useDispatch()
-  const { user } = useSelector((state) => state.auth)
   const { 
     allImages, 
     loading, 
