@@ -1,8 +1,6 @@
 name: CI/CD Pipeline
 
 on:
-  pull_request:
-    branches: [ "main" ]
   push:
     branches: [ "**" ]
 
@@ -109,7 +107,6 @@ jobs:
     name: Build Docker Image
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name == 'push'
     
     steps:
       - name: Checkout code
