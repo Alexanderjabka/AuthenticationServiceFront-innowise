@@ -96,7 +96,6 @@ function UploadImage({ onUploadSuccess }) {
 
   return (
     <div style={{
-      backgroundColor: 'white',
       border: '2px dashed transparent',
       borderRadius: '8px',
       padding: '24px',

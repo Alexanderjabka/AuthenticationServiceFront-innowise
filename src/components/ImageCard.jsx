@@ -10,15 +10,18 @@ function ImageCard({ image, isOwner = false, onImageClick }) {
   const dispatch = useDispatch()
 
   useEffect(() => {
+    let blobUrl = null
+
     const loadImage = async () => {
       try {
         const response = await api.get(image.contentUrl, {
           responseType: 'blob'
         })
-        const blobUrl = URL.createObjectURL(response.data)
+        blobUrl = URL.createObjectURL(response.data)
         setImageBlobUrl(blobUrl)
         setIsLoading(false)
       } catch (error) {
+        console.error('Failed to load image', error)
         setIsLoading(false)
       }
     }
@@ -26,8 +29,8 @@ function ImageCard({ image, isOwner = false, onImageClick }) {
     loadImage()
 
     return () => {
-      if (imageBlobUrl) {
-        URL.revokeObjectURL(imageBlobUrl)
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl)
       }
     }
   }, [image.contentUrl])
@@ -38,6 +41,7 @@ function ImageCard({ image, isOwner = false, onImageClick }) {
       await dispatch(deleteImage(image.id)).unwrap()
       setShowDeleteConfirm(false)
     } catch (error) {
+      console.error('Failed to delete image', error)
     } finally {
       setIsLoading(false)
     }
@@ -138,7 +142,6 @@ function ImageCard({ image, isOwner = false, onImageClick }) {
           </button>
         )}
       </div>
-
       {showDeleteConfirm && (
         <div style={{
           position: 'fixed',

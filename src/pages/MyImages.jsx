@@ -14,13 +14,10 @@ function MyImages() {
     error, 
     currentPage, 
     totalPages, 
-    totalImages,
-    uploadLoading 
+    totalImages
   } = useSelector((state) => state.images)
   
   const [showUpload, setShowUpload] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [sortBy, setSortBy] = useState('newest')
 
   useEffect(() => {
     dispatch(fetchUserImages({ page: currentPage, limit: 10 }))
@@ -34,14 +31,6 @@ function MyImages() {
   const handleUploadSuccess = () => {
     setShowUpload(false)
     dispatch(fetchUserImages({ page: currentPage, limit: 10 }))
-  }
-
-  const handleSearch = (e) => {
-    e.preventDefault()
-  }
-
-  const handleSortChange = (e) => {
-    setSortBy(e.target.value)
   }
 
   return (

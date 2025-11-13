@@ -24,5 +24,6 @@ export const clearExpiredTokens = () => {
       }
     }
   } catch (error) {
+    console.error('Failed to parse tokens while clearing expired values', error)
   }
 }

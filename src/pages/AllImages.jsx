@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { fetchAllImages, setCurrentPage } from '../store/imageSlice'
@@ -16,9 +16,6 @@ function AllImages() {
     totalImages 
   } = useSelector((state) => state.images)
   
-  const [searchQuery, setSearchQuery] = useState('')
-  const [sortBy, setSortBy] = useState('newest')
-
   useEffect(() => {
     dispatch(fetchAllImages({ page: currentPage, limit: 10 }))
   }, [dispatch, currentPage])
@@ -26,14 +23,6 @@ function AllImages() {
   const handlePageChange = (page) => {
     dispatch(setCurrentPage(page))
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  const handleSearch = (e) => {
-    e.preventDefault()
-  }
-
-  const handleSortChange = (e) => {
-    setSortBy(e.target.value)
   }
 
   return (
@@ -98,63 +87,6 @@ function AllImages() {
               </Link>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto 32px auto',
-        padding: '0 24px'
-      }}>
-        <div style={{
-          display: 'flex',
-          gap: '16px',
-          alignItems: 'center'
-        }}>
-          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px', flex: '1', minWidth: '200px' }}>
-            <input
-              type="text"
-              placeholder="enter user name"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                flex: 1,
-                padding: '10px 16px',
-                border: '1px solid #dee2e6',
-                borderRadius: '4px',
-                fontSize: '14px',
-                outline: 'none',
-                transition: 'border-color 0.2s ease'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#007bff'
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#dee2e6'
-              }}
-            />
-            <button
-              type="submit"
-              style={{
-                backgroundColor: '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '10px 16px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                transition: 'background-color 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#5a6268'
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#6c757d'
-              }}
-            >
-              Search
-            </button>
-          </form>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import ImageCard from './ImageCard'
 import Pagination from './Pagination'
 import api from '../services/api'
@@ -24,36 +24,41 @@ function ImageGallery({
     }
   }
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     if (modalImageUrl) {
       URL.revokeObjectURL(modalImageUrl)
     }
     setModalImageUrl(null)
     setSelectedImage(null)
-  }
+  }, [modalImageUrl])
 
   useEffect(() => {
-    if (selectedImage) {
-      const loadModalImage = async () => {
-        setModalLoading(true)
-        try {
-          const response = await api.get(selectedImage.contentUrl, {
-            responseType: 'blob'
-          })
-          const blobUrl = URL.createObjectURL(response.data)
-          setModalImageUrl(blobUrl)
-        } catch (error) {
-        } finally {
-          setModalLoading(false)
-        }
-      }
-
-      loadModalImage()
+    if (!selectedImage) {
+      return undefined
     }
 
+    let blobUrl = null
+
+    const loadModalImage = async () => {
+      setModalLoading(true)
+      try {
+        const response = await api.get(selectedImage.contentUrl, {
+          responseType: 'blob'
+        })
+        blobUrl = URL.createObjectURL(response.data)
+        setModalImageUrl(blobUrl)
+      } catch (error) {
+        console.error('Failed to load modal image', error)
+      } finally {
+        setModalLoading(false)
+      }
+    }
+
+    loadModalImage()
+
     return () => {
-      if (modalImageUrl) {
-        URL.revokeObjectURL(modalImageUrl)
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl)
       }
     }
   }, [selectedImage])
@@ -75,7 +80,7 @@ function ImageGallery({
         document.removeEventListener('keydown', handleEscape)
       }
     }
-  }, [selectedImage])
+  }, [selectedImage, closeModal])
 
   if (loading) {
     return (
