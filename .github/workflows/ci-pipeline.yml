@@ -1,0 +1,188 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "**" ]
+
+env:
+  NODE_VERSION: '20'
+  DOCKER_IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}
+jobs:
+  dependencies:
+    name: Setting dependencies (npm ci)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Archive node_modules
+        run: tar -czf node_modules.tar.gz node_modules
+
+      - name: Upload dependencies artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules.tar.gz
+          retention-days: 1
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    needs: dependencies
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Download dependencies artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+          path: .
+
+      - name: Extract dependencies
+        run: tar -xzf node_modules.tar.gz && rm node_modules.tar.gz
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test --if-present
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: tests
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Download dependencies artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+          path: .
+
+      - name: Extract dependencies
+        run: tar -xzf node_modules.tar.gz && rm node_modules.tar.gz
+
+      - name: Build application
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'http://localhost:3000' }}
+          VITE_LOGIN_REDIRECT_URL: ${{ secrets.VITE_LOGIN_REDIRECT_URL || '/login' }}
+          VITE_REGISTER_REDIRECT_URL: ${{ secrets.VITE_REGISTER_REDIRECT_URL || '/register' }}
+          VITE_AUTH_TOKEN_KEY: ${{ secrets.VITE_AUTH_TOKEN_KEY || 'authToken' }}
+          VITE_REFRESH_TOKEN_KEY: ${{ secrets.VITE_REFRESH_TOKEN_KEY || 'refreshToken' }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  docker-build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL || 'http://localhost:3000' }}
+            VITE_LOGIN_REDIRECT_URL=${{ secrets.VITE_LOGIN_REDIRECT_URL || '/login' }}
+            VITE_REGISTER_REDIRECT_URL=${{ secrets.VITE_REGISTER_REDIRECT_URL || '/register' }}
+            VITE_AUTH_TOKEN_KEY=${{ secrets.VITE_AUTH_TOKEN_KEY || 'authToken' }}
+            VITE_REFRESH_TOKEN_KEY=${{ secrets.VITE_REFRESH_TOKEN_KEY || 'refreshToken' }}
+          outputs: type=docker,dest=/tmp/docker-image.tar
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp/docker-image.tar
+          retention-days: 1
+
+  docker-publish:
+    name: Docker Image Publishing (Docker Hub)
+    runs-on: ubuntu-latest
+    needs: docker-build
+    
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Load Docker image
+        run: docker load --input /tmp/docker-image.tar
+
+      - name: Push Docker image to Docker Hub
+        run: docker image push --all-tags ${{ env.DOCKER_IMAGE_NAME }}
+
+      - name: Docker Hub image URL
+        run: echo "Image published to https://hub.docker.com/r/${{ env.DOCKER_IMAGE_NAME }}"
