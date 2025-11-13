@@ -5,7 +5,6 @@ import api from '../services/api'
 
 function ImageCard({ image, isOwner = false, onImageClick }) {
   const [isLoading, setIsLoading] = useState(true)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [imageBlobUrl, setImageBlobUrl] = useState(null)
   const dispatch = useDispatch()
 
@@ -39,7 +38,6 @@ function ImageCard({ image, isOwner = false, onImageClick }) {
     setIsLoading(true)
     try {
       await dispatch(deleteImage(image.id)).unwrap()
-      setShowDeleteConfirm(false)
     } catch (error) {
       console.error('Failed to delete image', error)
     } finally {
@@ -112,7 +110,7 @@ function ImageCard({ image, isOwner = false, onImageClick }) {
           <button
             onClick={(e) => {
               e.stopPropagation()
-              setShowDeleteConfirm(true)
+              handleDelete()
             }}
             style={{
               position: 'absolute',
@@ -142,66 +140,6 @@ function ImageCard({ image, isOwner = false, onImageClick }) {
           </button>
         )}
       </div>
-      {showDeleteConfirm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '24px',
-            borderRadius: '8px',
-            maxWidth: '400px',
-            width: '90%',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ margin: '0 0 16px 0', color: '#333' }}>
-              Delete Image?
-            </h3>
-            <p style={{ margin: '0 0 24px 0', color: '#666' }}>
-              Are you sure you want to delete this image? This action cannot be undone.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={isLoading}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#dc3545',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  opacity: isLoading ? 0.6 : 1
-                }}
-              >
-                {isLoading ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <style jsx>{`
         @keyframes spin {
