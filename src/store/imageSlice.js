@@ -77,6 +77,23 @@ export const deleteImage = createAsyncThunk(
   }
 )
 
+export const toggleLike = createAsyncThunk(
+  'images/toggleLike',
+  async (imageId, { rejectWithValue }) => {
+    try {
+      const { data } = await api.post(`/images/${imageId}/likes`)
+      return data
+    } catch (err) {
+      const message = err.response?.data?.message || err.message
+      return rejectWithValue(message)
+    }
+  }
+)
+
+const updateCollectionItem = (collection, imageId, changes) =>
+  collection.map((image) =>
+    image.id === imageId ? { ...image, ...changes } : image
+  )
 
 const imageSlice = createSlice({
   name: 'images',
@@ -95,6 +112,11 @@ const imageSlice = createSlice({
       state.currentPage = 1
       state.totalPages = 0
       state.totalImages = 0
+    },
+    updateImageCommentsCount: (state, action) => {
+      const { imageId, commentsCount } = action.payload
+      state.userImages = updateCollectionItem(state.userImages, imageId, { commentsCount })
+      state.allImages = updateCollectionItem(state.allImages, imageId, { commentsCount })
     },
   },
   extraReducers: (builder) => {
@@ -140,8 +162,13 @@ const imageSlice = createSlice({
       })
       .addCase(uploadImage.fulfilled, (state, action) => {
         state.uploadLoading = false
-        // Add new image to user images
-        state.userImages.unshift(action.payload)
+        const newImage = {
+          likesCount: 0,
+          commentsCount: 0,
+          likedByCurrentUser: false,
+          ...action.payload,
+        }
+        state.userImages.unshift(newImage)
         state.totalImages += 1
       })
       .addCase(uploadImage.rejected, (state, action) => {
@@ -156,8 +183,19 @@ const imageSlice = createSlice({
         state.allImages = state.allImages.filter(img => img.id !== imageId)
         state.totalImages = Math.max(0, state.totalImages - 1)
       })
+      .addCase(toggleLike.fulfilled, (state, action) => {
+        const { imageId, liked, likesCount } = action.payload
+        state.userImages = updateCollectionItem(state.userImages, imageId, {
+          likedByCurrentUser: liked,
+          likesCount,
+        })
+        state.allImages = updateCollectionItem(state.allImages, imageId, {
+          likedByCurrentUser: liked,
+          likesCount,
+        })
+      })
   },
 })
 
-export const { setCurrentPage, clearError, clearImages } = imageSlice.actions
+export const { setCurrentPage, clearError, clearImages, updateImageCommentsCount } = imageSlice.actions
 export default imageSlice.reducer
